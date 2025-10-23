@@ -1,13 +1,53 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-void main() {
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    IO.println(String.format("Hello and welcome!"));
+import com.taxibooking.controller.*;
+import com.taxibooking.service.*;
+import com.taxibooking.view.*;
+import com.taxibooking.model.Driver;
 
-    for (int i = 1; i <= 5; i++) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        IO.println("i = " + i);
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Entry point for the Taxi Booking System application.
+ * Initializes services, controllers, menus, and starts the main menu.
+ */
+public final class Main {
+
+    // Private constructor to prevent instantiation
+    private Main() {}
+
+    public static void main(final String[] args) {
+
+        // Initialize Taxi service and pre-load demo taxis
+        final TaxiService taxiService = new TaxiServiceImpl();
+        taxiService.registerDemoTaxis();
+
+        // Shared driver list
+        final List<Driver> driverList = new ArrayList<>();
+        final DriverServiceImpl driverService = new DriverServiceImpl(driverList);
+
+        // Registration services using shared lists
+        final DriverRegistrationService driverRegService = new DriverRegistrationServiceImpl(driverList);
+        final TaxiRegistrationService taxiRegService = new TaxiRegistrationServiceImpl(taxiService.get());
+
+        // Controllers
+        final BookingController bookingController = new BookingController();
+        final DriverController driverController = new DriverController(driverService);
+        final TaxiController taxiController = new TaxiController(taxiService);
+        final DriverRegistrationController driverRegController = new DriverRegistrationController(driverRegService);
+        final TaxiRegistrationController taxiRegController = new TaxiRegistrationController(taxiRegService);
+
+        // Menus
+        final CustomerMenu customerMenu = new CustomerMenu(taxiService, bookingController);
+        final AdminMenu adminMenu = new AdminMenu(
+                taxiController,
+                driverController,
+                taxiRegController,
+                driverRegController
+        );
+        final DriverMenu driverMenu = new DriverMenu(taxiService, bookingController, driverController);
+
+        // Main menu
+        final MainMenu mainMenu = new MainMenu(customerMenu, adminMenu, driverMenu);
+        mainMenu.run();
     }
 }
